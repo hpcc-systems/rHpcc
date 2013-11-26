@@ -1,0 +1,66 @@
+hpccSort<-function(recordset,value,joined=NULL,skew=NULL,threshold=NULL,few=NULL,joinedset=NULL,limit=NULL,target=NULL,size=NULL,local=NULL,stable=NULL,unstable=NULL,algorithm=NULL){
+
+trim<<-function (x) 
+{
+    gsub("^\\s+|\\s+$", "", x)
+    gsub("^,+|,+$", "", x)	
+}
+   
+    is.not.null <- function(x) ! is.null(x)
+    if (missing(recordset)) {
+    stop("no recordset.")	
+    }
+    else
+    {
+     xyz<<-NULL
+     if (is.not.null(joined))
+     {	 	
+     joinstr<-trim(paste(joined,"(",joinedset,")",sep=""))
+     }
+     else
+     {
+     joinstr<-trim(paste(joined,sep=" "))	
+     }
+     if (is.not.null(skew))
+     {
+     limt<-trim(paste(limit,target,sep=","))
+     skewstr<-trim(paste(skew,"(",limt,")",sep=""))
+     }
+     else
+     { 	 	  			  		
+     skewstr<-trim(paste(skew,sep=" "))
+     }
+     if(is.not.null(threshold))
+     {
+     threstr<-trim(paste(threshold,"(",size,")",sep=""))
+     }
+     else
+     {
+     threstr<-trim(paste(threshold,sep=" "))		
+     }
+     if(is.not.null(stable))
+     {
+     stabstr<-trim(paste(stable,"(",algorithm,")",sep=""))
+     }
+     else
+     {
+     stabstr<-trim(paste(stable,sep=" "))	
+     }
+     if(is.not.null(unstable))	
+     {
+     unstabstr<-trim(paste(unstable,"(",algorithm,")",sep=""))	 	
+     }
+     else
+     {
+     unstabstr<-trim(paste(unstable,sep=" "))					
+     }
+     str1<-trim(paste(recordset,value,joinstr,sep=","))	
+     str2<-trim(paste(str1,skewstr,sep=","))
+     str3<-trim(paste(str2,threstr,sep=","))
+     str4<-trim(paste(str3,stabstr,sep=","))
+     str5<-trim(paste(str4,unstabstr,sep=","))
+     str6<-trim(paste(str5,local,sep=","))
+     str7<-trim(paste(str6,few,sep=","))				
+     xyz <<- trim(paste(xyz,paste("outsort := SORT(",str7,sep="",");")))
+    }
+}
