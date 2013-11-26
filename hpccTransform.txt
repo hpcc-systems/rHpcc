@@ -1,0 +1,57 @@
+hpccTransform<-function(resulttype,funcname,parameterlist,skip=NULL,condition=NULL,locals=NULL){
+
+  trim<<-function (x) 
+  {
+    gsub("^\\s+|\\s+$", "", x)
+    gsub("^,+|,+$", "", x)	
+  }
+
+   is.not.null <- function(x) ! is.null(x)
+   if (missing(resulttype))
+   {
+   stop("no resulttype")	
+   }
+   else
+    {
+     if (is.not.null(skip)) 	
+      {
+       strn1<-trim(paste(":= TRANSFORM,",skip))	  	    	
+      }
+      else
+      {
+      strn1<-trim(paste(":= TRANSFORM",skip))		
+      }
+     	xyz<<-NULL
+	str1<-trim(paste(resulttype,funcname,sep=" "))
+	str2<-trim(paste(str1,"(",parameterlist,")",sep=""))
+	strn2<-trim(paste(strn1,condition,sep=" "))
+     	xyz <<- trim(paste(xyz,paste(str2,strn2,sep=" ",";END;")))					
+	
+    }
+}
+
+
+
+/**********************************************************************************************************/
+# resulttype - The name of a RECORD structure Attribute that specifies the output format of the function
+# funcname  - The name of the function the TRANSFORM structure defines.
+# parameterlist -The value types and labels of the parameters that will be passed to the TRANSFORM function.
+# Skip -Optional. Specifies the condition under which the TRANSFORM function operation is skipped.
+# condition - A semicolon delimeted logical expressions under the transform operation.
+# Locals  - Optional. Definitions of local Attributes useful within the TRANSFORM function.
+/************************************************************************************************************/
+
+/**Example R-user input for above function******************************************************************************************/
+	
+	hpccTransform(resulttype='outtrans',funcname='transfunname',parameterlist='any parameter L R',
+	condition='any conditional expresssion; defined by user;addition,subtraction..etc')
+
+
+*****User defined input above will be printed/ECL as-
+	
+	" outtrans transfunname(any parameter L R) := TRANSFORM  any conditional expresssion; 
+								 defined by user;
+								 addition,subtraction..etc ;
+								 END;"
+/************************************************************************************************************************************/
+
