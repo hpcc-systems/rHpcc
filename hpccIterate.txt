@@ -1,0 +1,37 @@
+hpccIterate<-function(resulttype,funcname,parameterlist,skip=NULL,condition=NULL,recordset,transparameter=NULL,local=NULL){
+
+  trim<<-function (x) 
+  {
+    gsub("^\\s+|\\s+$", "", x)
+    gsub("^,+|,+$", "", x)	
+  }
+  
+   is.not.null <- function(x) ! is.null(x)
+    if (missing(recordset))
+    {
+    stop("no recordset.")	
+    }
+    else
+    {
+      if (is.not.null(skip)) 	
+      {
+       strn1<-trim(paste(":= TRANSFORM,",skip))	  	    	
+      }
+      else
+      {
+      strn1<-trim(paste(":= TRANSFORM",skip))		
+      }
+     	xyz<<-NULL
+	str1<-trim(paste(resulttype,funcname,sep=" "))
+	str2<-trim(paste(str1,"(",parameterlist,")",sep=""))
+	strn2<-trim(paste(strn1,condition,sep=" "))
+     	xyz <<- trim(paste(xyz,paste(str2,strn2,sep=" ",";END;")))
+
+	
+	strt1<-trim(paste(recordset,sep=""))
+	strt2<-trim(paste("(",transparameter,")",sep=""))
+	strt3<-trim(paste(strt1,strt2,sep=""))
+	strl<-trim(paste(strt3,local,sep=","))
+	xyz <<- trim(paste(xyz,paste("ietrout:=ITERATE(",strl,sep="",");")))	
+    }		
+}	
