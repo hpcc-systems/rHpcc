@@ -1,139 +1,55 @@
-eclhost<-function (hostName, port= "8008" , clusterName = "thor", eclCode) 
-{
-  if (is.null(hostName) || !nzchar(trim(hostName))) {
-    stop("HostName required")
+hpccSd<-function(dataframe,fields,out.dataframe){
+  
+  strim<-function (dataframe) 
+  {
+    gsub("^\\s+|\\s+$", "", dataframe)
   }
-  else {
-    urlString <- (paste("http://", hostName, ":", port, "/EclDirect/RunEcl", 
-                       sep = ""))
-    content <- postForm(urlString, eclText = enc2utf8(eclCode), 
-                        cluster = enc2utf8(clusterName))
-    content
-  }
-}
-eclrresult<-function (xmlResult, downloadPath, format) 
-{
-  data
-  if (missing(xmlResult)) {
-    stop("Empty XML String.")
-  }
-  else {
-    docRoot = xmlRoot(xmlTreeParse(contentcsv))
-    nodes = getNodeSet(docRoot, "//Dataset")
-    for (i in 1:length(nodes)) {
-      datasetNode <- nodes[[i]]
-      resultSetName = xmlGetAttr(datasetNode, "name")
-      x <- array(1:length(datasetNode) * length(datasetNode[[1]]), 
-                 dim = c(length(datasetNode), length(datasetNode[[1]])))
-      for (j in 1:length(datasetNode)) {
-        rowNode <- datasetNode[[j]]
-        for (k in 1:length(rowNode)) {
-          actualNode <- rowNode[[k]]
-          x[j, k] <- xmlValue(actualNode)
-        }
-      }
-      if (!missing(downloadPath)) {
-        if (missing(format)) {
-          fileName <- paste(resultSetName, ".csv", sep = "")
-          path <- paste(downloadPath, "/", fileName, 
-                        sep = "")
-          write.table(x, file = path, sep = ",", row.names = F, 
-                      col.names = F)
-          assign(resultSetName, x,envir = .GlobalEnv)
-          
-        }
-        else {
-          fileName <- paste(resultSetName, ".xml", sep = "")
-          path <- paste(downloadPath, "/", fileName, 
-                        sep = "")
-          write.table(xmlResult, file = path, sep = ",", 
-                      row.names = F, col.names = F)
-        }
-      }
-      data <- x
-      data = as.data.frame(data, stringsAsFactors = FALSE)
+  
+  varlst<<-strsplit(fields, ",")
+  str1<-NULL
+  str2<-NULL
+  for (i in 1:length(varlst[[1]]))
+  {
+    k<-strim(varlst[[1]][i])
+    h<<-strsplit(k," ")
+    if (i > 1)
+    {
+      charh<-paste("'",h[[1]][1],"'",sep="")
+      str1<-strim(paste(str1,charh,sep=","))
+      hh<-strim(paste("LEFT.",h[[1]][1],sep=""))
+      str2<-strim(paste(str2,hh,sep=","))
     }
-    data
-  }
-}
-
-
-hpccSd<-function(x,v){
-
-trim<-function (x) 
-{
-    gsub("^\\s+|\\s+$", "", x)
-}
-
-  n<<-strsplit(v, ",")
-  xyz <<- ""
-  xyz <<- paste(xyz,paste("IMPORT Std;"),"\n")
-  xyz <<- paste(xyz,paste("myddata :=RECORD"),"\n")
-  for (i in 1:length(n[[1]]))
-  {
-    j<-trim(n[[1]][i])
-    var1<-j 
-    xyz <<- paste(xyz,paste(c(var1)),";","\n")
-  }
-  xyz <<- paste(xyz,paste(("END;"),"\n"))
-  xyz <<- paste(xyz,paste("ds := DATASET('~",x,"'",sep="",",myddata, THOR);","\n"))
-  
- str1<-NULL
- str2<-NULL
- for (i in 1:length(n[[1]]))
-  {
-     k<-trim(n[[1]][i])
-     l<-gsub(' {2,}',' ',k)
-     h<<-strsplit(l," ")
-     if (i > 1)
-     {
-         charh<-paste("'",h[[1]][2],"'",sep="")
-	 str1<-trim(paste(str1,charh,sep=","))
-         hh<-trim(paste("LEFT.",h[[1]][2],sep=""))
-         str2<-trim(paste(str2,hh,sep=","))
-     }
-     else
-     {   
-	 charh<-paste("'",h[[1]][2],"'",sep="")
-         str1<-trim(paste(str1,charh))
-         hh<-trim(paste("LEFT.",h[[1]][2],sep=""))
-         str2<-trim(paste(str2,hh))
-     }	
-     
-  }
-	
-	xyz<<-paste(xyz,paste("rec :=RECORD"),"\n")
-	xyz<<-paste(xyz,paste("INTEGER3 id;"),"\n")
-	xyz<<-paste(xyz,paste("DS;"),"\n")
-	xyz<<-paste(xyz,paste("END;"),"\n")
-	xyz<<-paste(xyz,paste("REC mytrans (DS L, INTEGER C) := TRANSFORM"),"\n")
-	xyz<<-paste(xyz,paste("SELF.id :=C;"),"\n")
-	xyz<<-paste(xyz,paste("SELF :=L;"),"\n")
-	xyz<<-paste(xyz,paste("END;"),"\n")
-	xyz<<-paste(xyz,paste("DSR:=PROJECT(DS,mytrans(LEFT,COUNTER));"),"\n")
-	xyz<<-paste(xyz,paste("DSR;"),"\n")
-	xyz<<-paste(xyz,paste("NumField:=RECORD"),"\n")
-	xyz<<-paste(xyz,paste("UNSIGNED id;"),"\n")
-	xyz<<-paste(xyz,paste("STRING number;"),"\n")
-	xyz<<-paste(xyz,paste("REAL8 value;"),"\n")
-	xyz<<-paste(xyz,paste("END;"),"\n")
-	xyz<<-paste(xyz,paste("OutDs:=NORMALIZE(DSR,",length(n[[1]]),",TRANSFORM(NumField,SELF.id:=LEFT.id,SELF.number:=CHOOSE(COUNTER,",str1,sep="",");SELF.value:=CHOOSE(COUNTER,",str2,")));","\n"))
-	xyz<<-paste(xyz,paste("OutDs;"),"\n")
-	xyz<<-paste(xyz,paste("SingleField := RECORD"),"\n")
-	xyz<<-paste(xyz,paste("OutDS.number;"),"\n")
-	xyz<<-paste(xyz,paste("Sd   := SQRT(VARIANCE(GROUP,OutDS.value));"),"\n")
-	xyz<<-paste(xyz,paste("END;"),"\n")
-	xyz<<-paste(xyz,paste("SingleUni   := TABLE(OutDS,SingleField,number);"),"\n")
-	xyz<<-paste(xyz,paste("output(SingleUni,named('sdOfvar'));"))
-
-  
-  fileout<-getwd()
-  str<-.libPaths()
-  str1<-paste(str,"/rtoHpcc/hostsetting.txt",sep="")
-  tt<-read.table(str1,sep="\t")
-  f1<-as.character(tt$V1[[1]])
-  f2<-as.character(tt$V1[[2]])
-  contentcsv<<-eclhost(hostName=f1, port=f2,eclCode=xyz)
-  data <- eclrresult(contentcsv, downloadPath=fileout)	
-}
-
+    else
+    {   
+      charh<-paste("'",h[[1]][1],"'",sep="")
+      str1<-strim(paste(str1,charh))
+      hh<-strim(paste("LEFT.",h[[1]][1],sep=""))
+      str2<-strim(paste(str2,hh))
+    }	
+    
+  }	
+  xyz<<-paste(xyz,paste("recsd :=RECORD"),"\n")
+  xyz<<-paste(xyz,paste("INTEGER3 id;"),"\n")
+  xyz<<-paste(xyz,paste(dataframe,";"),"\n")
+  xyz<<-paste(xyz,paste("END;"),"\n")
+  xyz<<-paste(xyz,paste("recsd sdtrans (",dataframe," L, INTEGER C) := TRANSFORM"),"\n")
+  xyz<<-paste(xyz,paste("SELF.id :=C;"),"\n")
+  xyz<<-paste(xyz,paste("SELF :=L;"),"\n")
+  xyz<<-paste(xyz,paste("END;"),"\n")
+  xyz<<-paste(xyz,paste("DSRSD:=PROJECT(",dataframe,",sdtrans(LEFT,COUNTER));"),"\n")
+  #xyz<<-paste(xyz,paste("DSRSD;"),"\n")
+  xyz<<-paste(xyz,paste("NumSdField:=RECORD"),"\n")
+  xyz<<-paste(xyz,paste("UNSIGNED id;"),"\n")
+  xyz<<-paste(xyz,paste("STRING field;"),"\n")
+  xyz<<-paste(xyz,paste("REAL8 value;"),"\n")
+  xyz<<-paste(xyz,paste("END;"),"\n")
+  xyz<<-paste(xyz,paste("OutDsSd:=NORMALIZE(DSRSD,",length(varlst[[1]]),",TRANSFORM(NumSdField,SELF.id:=LEFT.id,SELF.field:=CHOOSE
+                        (COUNTER,",str1,sep="",");SELF.value:=CHOOSE(COUNTER,",str2,")));","\n"))
+  #xyz<<-paste(xyz,paste("OutDsSd;"),"\n")
+  xyz<<-paste(xyz,paste("SingleSdField := RECORD"),"\n")
+  xyz<<-paste(xyz,paste("OutDsSd.field;"),"\n")
+  xyz<<-paste(xyz,paste("Sd   := SQRT(VARIANCE(GROUP,OutDsSd.value));"),"\n")
+  xyz<<-paste(xyz,paste("END;"),"\n")
+  xyz<<-paste(xyz,paste(out.dataframe,":= TABLE(OutDsSd,SingleSdField,field);"),"\n")
+  xyz <<-strim(paste(xyz,paste("OUTPUT(",out.dataframe,",named('",out.dataframe,"'));",sep="")))
+}	
