@@ -1,0 +1,113 @@
+Execute.Hpcc<-function(signal){
+  if (signal=='y' | signal=='Y')
+  {
+    xyz2<<-xyz
+    xyz<<-""
+    fileout<-getwd()
+    str<-.libPaths()
+    str1<-paste(str,"/rtoHpcc/hostsetting.txt",sep="")
+    tt<-read.table(str1,sep="\t")
+    f1<<-as.character(tt$V1[[1]])
+    f2<<-as.character(tt$V1[[2]])
+    eclCode<<-xyz2
+    hostname<<-f1
+    port<<-f2
+    
+    body<-""
+    body <-paste('<?xml version="1.0" encoding="utf-8"?>\
+                 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"\ 
+                 xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"\ 
+                 xmlns="urn:hpccsystems:ws:ecldirect">\
+                 <soap:Body>\
+                 <RunEclRequest>\
+                 <userName>xyz</userName>\
+                 <cluster>thor</cluster>\
+                 <limitResults>0</limitResults>\
+                 <eclText>',eclCode,'</eclText>\
+                 <snapshot>test</snapshot>\
+                 </RunEclRequest>\
+                 </soap:Body>\
+                 </soap:Envelope>\n')
+    
+    headerFields =
+      c(Accept = "text/xml",
+        Accept = "multipart/*",
+        'Content-Type' = "text/xml; charset=utf-8",
+        SOAPAction="urn:hpccsystems:ws:ecldirect")
+    
+    reader = basicTextGatherer()
+    handle = getCurlHandle()
+    
+    ur<-paste("http://",hostname,":",port,"/EclDirect/RunEcl?ver_=1",sep="")
+    curlPerform(url = ur,
+                httpheader = headerFields,
+                postfields = body,
+                writefunction = reader$update,
+                curl =handle
+    )
+    status = getCurlInfo( handle )$response.code
+    varWu1 <- reader$value()
+    newlst<-xmlParse(varWu1)
+    layout <- getNodeSet(newlst, "//*[local-name()='results']/text()", namespaces =  xmlNamespaceDefinitions(newlst,simplify = 
+                                                                                                               TRUE))    
+    colLayout <- layout[[1]]
+    layout1<- xmlToList(colLayout)
+    contentcsv<<-layout1  
+    data <- dataresult(contentcsv, downloadPath=fileout)
+  }
+  
+}
+
+
+
+dataresult<-function (xmlResult, downloadPath, format) 
+{
+  data
+  if (missing(xmlResult)) {
+    stop("Empty XML String.")
+  }
+  else {
+    docRoot = xmlRoot(xmlTreeParse(contentcsv))
+    nodes = getNodeSet(docRoot, "//Dataset")
+    
+    for (i in 1:length(nodes)) {
+      datasetNode <- nodes[[i]]
+      
+      resultSetName = xmlGetAttr(datasetNode, "name")
+      x <- array(1:length(datasetNode) * length(datasetNode[[1]]), 
+                 dim = c(length(datasetNode), length(datasetNode[[1]])))
+      
+      for (j in 1:length(datasetNode)) {
+        rowNode <- datasetNode[[j]]
+        
+        for (k in 1:length(rowNode)) {
+          actualNode <- rowNode[[k]]
+          x[j, k] <- xmlValue(actualNode)
+          
+        }
+      }
+      
+      y <- array(1:length(datasetNode) * length(datasetNode[[1]]), 
+                 dim = c(length(datasetNode), length(datasetNode[[1]])))      
+      for (j in 1:1) {
+        rowNode <- datasetNode[[j]]
+        
+        for (k in 1:length(rowNode)) {
+          actualNode <- rowNode[[k]]
+          y[j, k] <- xmlName(actualNode)
+          
+        }
+      }
+      y1<-y[1,]
+      colnames(x, do.NULL = FALSE)
+      colnames(x) <- c(y1)
+      if (!missing(downloadPath)) {
+        if (missing(format)) {
+          assign(resultSetName, x,envir = .GlobalEnv)
+        }
+      }
+      data = as.list(data, stringsAsFactors = FALSE)
+    }
+    data
+  }
+}
