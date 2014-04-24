@@ -1,6 +1,6 @@
 hpccMean<-function(dataframe,fields,out.dataframe){
   
-  strim<-function (dataframe) 
+  strim<-function (dataframe)
   {
     gsub("^\\s+|\\s+$", "", dataframe)
   }
@@ -20,12 +20,12 @@ hpccMean<-function(dataframe,fields,out.dataframe){
       str2<-strim(paste(str2,hh,sep=","))
     }
     else
-    {   
+    {
       charh<-paste("'",h[[1]][1],"'",sep="")
       str1<-strim(paste(str1,charh))
       hh<-strim(paste("LEFT.",h[[1]][1],sep=""))
       str2<-strim(paste(str2,hh))
-    }	
+    }
     
   }
   
@@ -50,8 +50,8 @@ hpccMean<-function(dataframe,fields,out.dataframe){
   #xyz<<-paste(xyz,paste("OutDsavg;"),"\n")
   xyz<<-paste(xyz,paste("SingleavgField := RECORD"),"\n")
   xyz<<-paste(xyz,paste("OutDsavg.field;"),"\n")
-  xyz<<-paste(xyz,paste("Mean   := AVE(GROUP,OutDsavg.value);"),"\n")
+  xyz<<-paste(xyz,paste("Mean := AVE(GROUP,OutDsavg.value);"),"\n")
   xyz<<-paste(xyz,paste("END;"),"\n")
   xyz<<-paste(xyz,paste(out.dataframe,":= TABLE(OutDsavg,SingleavgField,field);"),"\n")
-  xyz <<-strim(paste(xyz,paste("OUTPUT(",out.dataframe,",named('",out.dataframe,"'));",sep="")))
+  xyz <<-strim(paste(xyz,paste("OUTPUT(CHOOSEN(",out.dataframe,",20),named('",out.dataframe,"'));",sep="")))
 }

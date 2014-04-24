@@ -1,6 +1,6 @@
 hpccMin<-function(dataframe,fields,out.dataframe){
   
-  strim<-function (dataframe) 
+  strim<-function (dataframe)
   {
     gsub("^\\s+|\\s+$", "", dataframe)
   }
@@ -20,12 +20,12 @@ hpccMin<-function(dataframe,fields,out.dataframe){
       str2<-strim(paste(str2,hh,sep=","))
     }
     else
-    {   
+    {
       charh<-paste("'",h[[1]][1],"'",sep="")
       str1<-strim(paste(str1,charh))
       hh<-strim(paste("LEFT.",h[[1]][1],sep=""))
       str2<-strim(paste(str2,hh))
-    }	
+    }
     
   }
   

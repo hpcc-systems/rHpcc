@@ -5,7 +5,7 @@ Execute.Hpcc<-function(signal){
     xyz<<-""
     fileout<-getwd()
     str<-.libPaths()
-    str1<-paste(str,"/rtoHpcc/hostsetting.txt",sep="")
+    str1<-paste(str,"/REDA/hostsetting.txt",sep="")
     tt<-read.table(str1,sep="\t")
     f1<<-as.character(tt$V1[[1]])
     f2<<-as.character(tt$V1[[2]])
@@ -15,8 +15,8 @@ Execute.Hpcc<-function(signal){
     
     body<-""
     body <-paste('<?xml version="1.0" encoding="utf-8"?>\
-                 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"\ 
-                 xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"\ 
+                 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"\
+                 xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"\
                  xmlns="urn:hpccsystems:ws:ecldirect">\
                  <soap:Body>\
                  <RunEclRequest>\
@@ -48,11 +48,11 @@ Execute.Hpcc<-function(signal){
     status = getCurlInfo( handle )$response.code
     varWu1 <- reader$value()
     newlst<-xmlParse(varWu1)
-    layout <- getNodeSet(newlst, "//*[local-name()='results']/text()", namespaces =  xmlNamespaceDefinitions(newlst,simplify = 
-                                                                                                               TRUE))    
+    layout <- getNodeSet(newlst, "//*[local-name()='results']/text()", namespaces = xmlNamespaceDefinitions(newlst,simplify =
+                                                                                                               TRUE))
     colLayout <- layout[[1]]
     layout1<- xmlToList(colLayout)
-    contentcsv<<-layout1  
+    contentcsv<<-layout1
     data <- dataresult(contentcsv, downloadPath=fileout)
   }
   
@@ -60,54 +60,56 @@ Execute.Hpcc<-function(signal){
 
 
 
-dataresult<-function (xmlResult, downloadPath, format) 
-{
-  data
+
+# Returns a list of Dataframes for each <Dataset> element of XML.
+dataresult<-function (xmlResult, downloadPath) {
+  
+  # Create an empty list which stores the parsed dataframes.
+  
+  data <- list() 
   if (missing(xmlResult)) {
     stop("Empty XML String.")
-  }
+  } 
   else {
-    docRoot = xmlRoot(xmlTreeParse(contentcsv))
-    nodes = getNodeSet(docRoot, "//Dataset")
+    top <- xmlRoot(xmlTreeParse(xmlResult, useInternalNodes = TRUE))
     
-    for (i in 1:length(nodes)) {
-      datasetNode <- nodes[[i]]
+    # Get all the nodes "Dataset" nodes
+    nodes <- getNodeSet(top, "//Dataset")
+    
+    for(k in 1:length(nodes)) {  
       
-      resultSetName = xmlGetAttr(datasetNode, "name")
-      x <- array(1:length(datasetNode) * length(datasetNode[[1]]), 
-                 dim = c(length(datasetNode), length(datasetNode[[1]])))
+      # Iterate through each element of the get the value.
+      plantcat <- xmlSApply(nodes[[k]], function(x) xmlSApply(x, xmlValue))
+      #print(class(plantcat))
       
-      for (j in 1:length(datasetNode)) {
-        rowNode <- datasetNode[[j]]
-        
-        for (k in 1:length(rowNode)) {
-          actualNode <- rowNode[[k]]
-          x[j, k] <- xmlValue(actualNode)
-          
-        }
+      # Convert to Data Frame
+      df <- as.data.frame(plantcat)
+      #print(df)
+      
+      # Transpose of Dataframe. Not needed but just for better presentation
+      dfTransposed <- data.frame(t(df),row.names=NULL)
+      #print(class(dfTransposed))
+      
+      #getting the output dataframe in R window
+      nodes = getNodeSet(top, "//Dataset")
+      datasetNode <- nodes[[k]]
+      resultSetName <- xmlGetAttr(datasetNode, "name")
+      assign(resultSetName, dfTransposed,envir = .GlobalEnv)
+      newdata = data.frame(dfTransposed, stringsAsFactors = FALSE)
+      
+      # Download the file if "downloadPath" argument is specified
+      if(!missing(downloadPath)) {
+        # Get the Dataset Attribute name for saving the file
+        datasetNode <- nodes[[k]]
+        resultSetName <- xmlGetAttr(datasetNode, "name")
+        fileName <- paste(resultSetName,".csv", sep = "")
+        path <- paste(downloadPath,"/",fileName, sep = "")
+        write.table(dfTransposed,file=path,sep=",",row.names=F, col.names = T)
       }
       
-      y <- array(1:length(datasetNode) * length(datasetNode[[1]]), 
-                 dim = c(length(datasetNode), length(datasetNode[[1]])))      
-      for (j in 1:1) {
-        rowNode <- datasetNode[[j]]
-        
-        for (k in 1:length(rowNode)) {
-          actualNode <- rowNode[[k]]
-          y[j, k] <- xmlName(actualNode)
-          
-        }
-      }
-      y1<-y[1,]
-      colnames(x, do.NULL = FALSE)
-      colnames(x) <- c(y1)
-      if (!missing(downloadPath)) {
-        if (missing(format)) {
-          assign(resultSetName, x,envir = .GlobalEnv)
-        }
-      }
-      data = as.list(data, stringsAsFactors = FALSE)
-    }
-    data
+      data[[k]] <- list(dfTransposed)
+    }  
   }
+  
+  data
 }

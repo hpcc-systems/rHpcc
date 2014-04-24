@@ -1,6 +1,6 @@
 hpccMax<-function(dataframe,fields,out.dataframe){
   
-  trim<-function (dataframe) 
+  trim<-function (dataframe)
   {
     gsub("^\\s+|\\s+$", "", dataframe)
   }
@@ -20,12 +20,12 @@ hpccMax<-function(dataframe,fields,out.dataframe){
       str2<-strim(paste(str2,hh,sep=","))
     }
     else
-    {   
+    {
       charh<-paste("'",h[[1]][1],"'",sep="")
       str1<-strim(paste(str1,charh))
       hh<-strim(paste("LEFT.",h[[1]][1],sep=""))
       str2<-strim(paste(str2,hh))
-    }	
+    }
     
   }
   
@@ -49,8 +49,8 @@ hpccMax<-function(dataframe,fields,out.dataframe){
   #xyz<<-paste(xyz,paste("OutDsMax;"),"\n")
   xyz<<-paste(xyz,paste("SinglemaxField := RECORD"),"\n")
   xyz<<-paste(xyz,paste("OutDsMax.Field;"),"\n")
-  xyz<<-paste(xyz,paste("Maxval   := MAX(GROUP,OutDsMax.value);"),"\n")
+  xyz<<-paste(xyz,paste("Maxval := MAX(GROUP,OutDsMax.value);"),"\n")
   xyz<<-paste(xyz,paste("END;"),"\n")
   xyz<<-paste(xyz,paste(out.dataframe,":= TABLE(OutDsMax,SinglemaxField,Field);"),"\n")
-  xyz <<-strim(paste(xyz,paste("OUTPUT(",out.dataframe,",named('",out.dataframe,"'));",sep="")))
+  xyz <<-strim(paste(xyz,paste("OUTPUT(CHOOSEN(",out.dataframe,",20),named('",out.dataframe,"'));",sep="")))
 }
