@@ -1,0 +1,6 @@
+package:
+  name : REDA
+
+hpcchost:
+  filename : hostsetting.yml
+  dfu_service : WsDfu?ver_=1.2
