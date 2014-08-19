@@ -1,0 +1,46 @@
+hpcc.filter <- function(data,condition,out.dataframe,output=20,spray=FALSE) {
+	
+	data <- paste(out.dataframe,' := ',data,'(',condition,');\n ',sep="")
+	data <- paste(data,hpcc.output(out.dataframe,output),sep='')
+	hpcc.submit(data)
+}
+
+condition <- function(field,operator,keyword,type="NUM") {
+	
+	if(type=='STRING') {
+		keyword <- value(keyword)
+	}
+	if(type=='SET') {
+		keyword <- set(keyword)
+	}
+	condition <- paste("(",field,operator,keyword,")",sep=" ")
+	return(condition)
+}
+
+field <- function(name) {
+	return(name)
+}
+
+set <- function(keyword) {
+	if(is.vector(keyword)) {
+		if(class(keyword)=="numeric") {
+			keyword <- paste(keyword,collapse=',')
+		}
+		else if(class(keyword)=="character") {
+			keyword <- paste(keyword,collapse='","')
+			keyword <- paste('"',keyword,'"',sep="")
+		}
+		else {
+			return()
+		}
+		keyword <- paste("[",keyword,"]",sep="")
+		return(keyword)
+	}
+}
+
+keyword <- function(keyword) {
+	if(is.character(keyword)) {
+		keyword <- paste('"',keyword,'"',sep="")
+	}
+	return(keyword)
+}
