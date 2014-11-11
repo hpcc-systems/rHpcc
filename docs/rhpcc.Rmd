@@ -1,0 +1,203 @@
+rhpcc Package
+========================================================
+
+rhpcc Package is useful performing data analysis in R using the HPCC engine. HPCC stands for high performance computing cluster and it is useful for performing operations on large sets of data. So using this package a user who has knowledge of R will be able to perform large scale operations on HPCC. 
+
+
+Install the package -rhpcc
+Package Dependencies- install RCurl, Yaml and XML packages before running codes.
+```{r,results='hide',message=FALSE,warning=FALSE}
+library("rhpcc")
+library("XML")
+library("yaml")
+library("RCurl")
+```
+
+
+
+Begin writing the code after the executing the below command
+
+```{rBegin Hpcc}
+#hpcc.begin()
+```
+
+
+Dataset
+-------
+
+hpcc.dataset() is the function useful for fetching the data
+
+Arguments
+
+logicalfilename		-	Name of the logical file
+filetype			-	Format of the file sprayed in HPCC landing zone (Mostly it will be thor). By default it 
+						assumes the format to be 'thor'.
+
+
+```{rFetch Dataset}
+#To fetch data frm the logical File
+#ds <- hpcc.dataset('hthor::test::hpcc::airlines__p670296112','thor')
+ds <- 'dsAsdd'
+```
+
+Minimum Value
+-------------
+
+Returns the minimum values of the columns provided in the arguments
+
+Arguments
+
+dataframe		-	Name of the dataset
+fields			- 	list of the columns seperated by comma
+
+
+```{rMinimum Value}
+dsMin <- hpcc.min(ds,'arrtime')
+```
+
+Maximum Value
+-------------
+
+Returns the maximum values of the columns provided in the arguments
+
+Arguments
+
+dataframe		-	Name of the dataset
+fields			- 	list of the columns seperated by comma
+
+```{rMaximum Value}
+dsMax <- hpcc.max(ds,'arrtime')
+```
+
+Mean Value
+----------
+
+Returns the mean of the specified columns of the dataset
+
+Arguments
+
+dataframe		-	Name of the dataset
+fields			- 	list of the columns seperated by comma
+
+```{rMean Value}
+dsMean <- hpcc.mean(ds,'arrtime,deptime')
+```
+
+Standard Deviation
+------------------
+Returns the standard deviation of the specified columns of the dataset
+
+Arguments
+
+dataframe		-	Name of the dataset
+fields			- 	list of the columns seperated by comma
+
+```{rStandard Deviation}
+dsSD <- hpcc.sd(ds,'arrtime,deptime')
+```
+
+
+Median
+------
+Returns the median of the specified columns of the dataset
+
+Arguments
+
+dataframe		-	Name of the dataset
+fields			- 	list of the columns seperated by comma
+
+```{rMedian}
+dsMedian <- hpcc.median(ds,'arrtime,deptime')
+```
+
+Mode
+------
+Returns the mode of the specified columns of the dataset
+
+Arguments
+
+dataframe		-	Name of the dataset
+fields			- 	list of the columns seperated by comma
+
+```{rMode}
+dsMode <- hpcc.mode(ds,'arrtime,deptime')
+```
+
+Correlation
+-----------
+Returns the correlation between the specified columns of the dataset
+
+Arguments
+
+dataframe		-	Name of the dataset
+fields			- 	list of the columns seperated by comma (atleast two columns are required)
+method			-	Should take any of the two values -S(Spearson) or P(Pearson)
+
+```{rCorrelation}
+dsCorr <- hpcc.corr(dataframe=ds,fields='arrtime,deptime',method='S')
+```
+
+Frequency
+---------
+Returns the frequency of the specified columns of the dataset
+
+Arguments
+
+dataframe		-	Name of the dataset
+fields			- 	list of the columns seperated by comma (atleast two columns are required)
+sortorder		-	ASC or DSC , by default its ASC
+
+```{rFrequency}
+dsfreq <- hpcc.freq(dataframe=ds,fields='arrtime,deptime',sortorder='DSC')
+```
+
+Random
+------
+Adds a column of random numbers to the dataset
+
+Arguments
+
+dataframe		-	Name of the dataset
+
+```{rRandom}
+dsRand <- hpcc.rand(dataframe=ds)
+```
+
+Filter
+-----
+
+Filters the rows of a dataset based on the given condition
+
+Arguments
+data.frame		-	Name of the dataset
+condition		-	condition to filter
+
+```{rFilter}
+dsFilt <- hpcc.filter(data=ds,condition='year>2007')
+```
+
+Output
+------
+
+Outputs the dataset into R
+Arguments
+data.frame		-	Name of the dataset to output
+output			-	no of rows to output
+download		- 	TRUE/FALSE whether to download the complete data set to your machine
+
+```{rOutput}
+hpcc.output(dsFilt,20)
+#hpcc.output(dsMax,30,download=TRUE)
+```
+
+Execute
+-------
+
+Execute this command to execute the whole code written till now. This executes the whole code and returns the outputs. Once it runs the whole code, it shows the names of the files available for download and gives us the option to download the files. 
+Once the executuion part is done, it provides the option to download the files. 
+After downloading the files, user will be provided with option where the user can convert the downloaded files into FF objects
+
+
+```{rExecute}
+#hpcc.execute()
+```
