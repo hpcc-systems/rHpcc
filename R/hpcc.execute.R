@@ -41,7 +41,6 @@ hpcc.execute <-
     #uUrlforEx <- paste(hpccProtocol,'://',.hpccHostName,":",.hpccPort,"/",ecl_direct,"/RunEcl?ver_=1", sep="")
     
     #   	ur <- uUrlforEx
-    #		url <- 'https://216.19.105.2:18010/EclDirect'
     #		url <- 'https://127.0.0.1:8010/'
     
     url<-.uUrlHpccforEx

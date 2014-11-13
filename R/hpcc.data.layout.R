@@ -21,7 +21,7 @@ hpcc.data.layout <- function(logicalfilename) {
 	reader = basicTextGatherer()
 	
 	handle = getCurlHandle()
-#	url <- 'https://216.19.105.2:18010/EclDirect'
+
 	url <- .uUrlHpcc
 	# 	proxy<-readline(prompt="Do you use a proxy connection(Y/N) : ")
 	# 	if(proxy=='Y'||proxy=='y') {}
