@@ -1,94 +1,81 @@
 hpcc.execute <-
-	function () {
-		if(is.null(uUrl))
-			stop('Please start HPCC using the function - hpcc.begin()')
-		import <- ''
-		for(i in 1:length(hpccImport)) {
-			if(i>0) {
-				import <- paste(as.character(one), sep="' '", collapse=", ")
-				import <- sprintf("IMPORT %s;\n",import)
-			}
-		}
-		eclQuery <<- sprintf("%s%s",import,eclQuery)
-		eclCode <- eclQuery
-		eclQuery <<- ""
-		fileout <- getwd()
-		str <- .libPaths()
-		eclCode <- paste('<![CDATA[',eclCode,']]>')
-		body <- ""
+  function (signal) {
+    if(is.null(.uUrlHpccforEx))
+      stop('Please start HPCC using the function - hpcc.begin()')
+    eclCode <- ''
+    for(i in seq(from = 1,to = length(.hpccImport))) {
+      if(i!=1)
+        eclCode <- sprintf("%s,",eclCode)
+      else
+        eclCode <- 'IMPORT '
+      eclCode <- sprintf("%s %s",eclCode,.hpccImport[i])
+    }
+    eclCode <- sprintf("%s ;\n",eclCode)
+    eclCode <- paste(eclCode,.eclQuery,sep=' ')
+    .eclQuery <<- ""
+    fileout <- getwd()
+    str <- .libPaths()
+    eclCode <- paste('<![CDATA[',eclCode,']]>')
+    body <- ""
+    body <-paste('<?xml version="1.0" encoding="utf-8"?>\
+                 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"\
+                 xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"\
+                 xmlns="urn:hpccsystems:ws:ecldirect">\
+                 <soap:Body>\
+                 <RunEclRequest>\
+                 <userName>r2hpccUser</userName>\n                 
+                 <cluster>',.hpccClustername,'</cluster>\
+                 <limitResults>0</limitResults>\
+                 <eclText>',eclCode,'</eclText>\
+                 <snapshot>test</snapshot>\n                 
+                 </RunEclRequest>\
+                 </soap:Body>\
+                 </soap:Envelope>\n', sep="")
+    eclCode <<- eclCode
+    
+    headerFields = c(Accept = "text/xml", Accept = "multipart/*", 
+                     `Content-Type` = "text/xml; charset=utf-8", SOAPAction = "urn:hpccsystems:ws:ecldirect")
+    reader = basicTextGatherer()
+    
+    handle = getCurlHandle()
+    #uUrlforEx <- paste(hpccProtocol,'://',.hpccHostName,":",.hpccPort,"/",ecl_direct,"/RunEcl?ver_=1", sep="")
+    
+    #   	ur <- uUrlforEx
+    #		url <- 'https://216.19.105.2:18010/EclDirect'
+    #		url <- 'https://127.0.0.1:8010/'
+    
+    url<-.uUrlHpccforEx
+    
+    # 		opts <- list(
+    # 			proxy         = "", 
+    # 			proxyusername = "", 
+    # 			proxypassword = "", 
+    # 			proxyport     = ""
+    # 		)
+    
+    curlPerform(url = url, 
+                httpheader = headerFields, 
+                ssl.verifypeer = FALSE,
+                postfields = body, 
+                writefunction = reader$update, 
+                curl = handle)
+    status = getCurlInfo(handle)$response.code
+    varWu1 <- reader$value()
+    newlst <- xmlParse(varWu1)
+    layout <- getNodeSet(newlst, "//*[local-name()='results']/text()", 
+                         namespaces = xmlNamespaceDefinitions(newlst, simplify = TRUE))
+    
+    colLayout <<- layout[[1]]
+    
+    layout1 <<- xmlToList(colLayout)
+    .hpccData <<- .data.result(layout1)
+    hpcc.showFilesToDownload()
+    # 		if(length(.hpccData)==0)
+    # 			return()		
+    # 		x <- readline("Do you want to convert any of the objects into Big Data FF objects(Y/N) : ")
+  }
 
-		body <-paste('<?xml version="1.0" encoding="utf-8"?>\
-					 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"\
-					 xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"\
-					 xmlns="urn:hpccsystems:ws:ecldirect">\
-					 <soap:Body>\
-					 <RunEclRequest>\
-					 <userName>',hpccUsername,'</userName>\
-					 <cluster>',hpccClustername,'</cluster>\
-					 <limitResults>0</limitResults>\
-					 <eclText>',eclCode,'</eclText>\
-					 <snapshot/>\
-					 </RunEclRequest>\
-					 </soap:Body>\
-					 </soap:Envelope>\n', sep="")
-		eclCode <<- eclCode
-		
-		headerFields = c(Accept = "text/xml", Accept = "multipart/*", 
-						 `Content-Type` = "text/xml; charset=utf-8", SOAPAction = "urn:hpccsystems:ws:ecldirect")
-		reader = basicTextGatherer()
-		
-		handle = getCurlHandle()
-		uUrlforEx <- paste(hpccProtocol,'://',hpccHostName,":",hpccPort,"/",ecl_direct,"/RunEcl?ver_=1", sep="")
-		
-		ur <- uUrlforEx
-		curlPerform(url = ur, httpheader = headerFields, postfields = body, 
-					writefunction = reader$update, curl = handle)
-		status = getCurlInfo(handle)$response.code
-		varWu1 <- reader$value()
-		newlst <- xmlParse(varWu1)
-		layout <- getNodeSet(newlst, "//*[local-name()='results']/text()", 
-							 namespaces = xmlNamespaceDefinitions(newlst, simplify = TRUE))
-		
-		colLayout <- layout[[1]]
-# 		print(colLayout)
-		layout1 <- xmlToList(colLayout)
-# 		print(layout1)
-		hpccData <<- data.result(layout1)
-# 		hpccData
-		hpcc.showFilesToDownload()
-		if(length(hpccData)==0)
-			return()
-		i <- readline('Do you want to plot any graph (Y/N): ')
-		if(i!='Y') {
-			return('Bye')
-		}
-		for(i in 1:length(hpccData)) {
-			print(paste(i,names(hpccData[[i]]),sep=' '))
-		}
-		a <- readline('Choose the dataset to plot : ')
-		a <- as.numeric(a)
-		print("1. Histogram")
-		print("2. Scatter Plot")
-		graphtype <- readline('Choose the graph to plot : ')
-		graphtype <- as.numeric(graphtype)
-		lis <- as.list(names(hpccData[[a]][[1]]))
-		for(i in 1:length(lis)) {
-			print(paste(i,lis[[i]][[1]],sep=' '))
-		}
-		x <- readline('Input the variable to plot as X-axis :' )
-		x <- as.numeric(x)
-		y <- readline('Input the variable to plot as Y-axis :' )
-		y <- as.numeric(y)
-		
-		if(graphtype==2) {
-			plot(as.numeric(hpccData[[a]][[1]][[x]]),as.numeric(hpccData[[a]][[1]][[y]]),xlab=lis[[x]][[1]],ylab=lis[[y]][[1]])
-		}
-		if(graphtype==1) {
-			hist(as.numeric(hpccData[[1]][[a]][[x]]),as.numeric(hpccData[[1]][[a]][[y]]),xlab=lis[[x]][[1]],ylab=lis[[y]][[1]])
-		}		
-	}
-
-data.result <- function (xmlResult, downloadPath, format) {
+.data.result <- function (xmlResult, downloadPath, format) {
 	data
 	if (missing(xmlResult)) {
 		stop("Empty XML String.")
@@ -148,4 +135,3 @@ data.result <- function (xmlResult, downloadPath, format) {
 		data
 	}
 }
-

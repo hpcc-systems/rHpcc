@@ -5,21 +5,23 @@ hpcc.output <- function (out.dataframe,noOfRecordsNeed,download=FALSE) {
 	if(noOfRecordsNeed==0)
 		out <- ''
 	if(download) {
-		hpcc.import('STD')
+# 		.eclQuery <<- sprintf("import STD;\n%s",.eclQuery)
+		.hpcc.import(import = "STD")
 		out1 <- paste("OUTPUT(", out.dataframe,",,'~rhpcc::",outX, "',CSV(HEADING(SINGLE)));\n", sep = "")
-		despray <- paste("Std.File.Despray('~rhpcc::",outX,"','",hpccHostName,"','/var/lib/HPCCSystems/mydropzone/",outX,".csv',,,,TRUE);\n",sep='')
+		despray <- paste("Std.File.Despray('~rhpcc::",outX,"','",.hpccHostName,"','/var/lib/HPCCSystems/mydropzone/",outX,".csv',,,,TRUE);\n",sep='')
 		out <- paste(out1,despray,out,sep='')
 		out <- paste(out,"STD.File.DeleteLogicalFile('~rhpcc::",outX,"');\n",sep='')
-		hpccSessionVariables <<- rbind(hpccSessionVariables,c((length(hpccSessionVariables)/2)+1,outX))
+		numbas <- as.character(dim(.hpccSessionVariables)[1]+1)
+		.hpccSessionVariables <<- rbind(.hpccSessionVariables,c(numbas,outX,0,0))
 	}
-	hpcc.submit(out)
+	.hpcc.submit(out)
 }
 
 
-hpcc.submit <-
+
+.hpcc.submit <-
 	function(code,submit=TRUE) {
 		if(!submit)
 			return(code)
-		eclQuery <<- paste(eclQuery,code,sep='')
+		.eclQuery <<- paste(.eclQuery,code,sep='')
 	}
-
